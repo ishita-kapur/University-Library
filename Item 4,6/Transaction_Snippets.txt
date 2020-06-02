@@ -1,0 +1,344 @@
+Transaction 4.1
+
+        try{
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/library", "root", "password");
+            
+            String sql = "insert into member values (?, ?, ?, ?, ?, ?, ?)";
+            String query_2 = "insert into address values (?, ?, ?)";
+            String query_3 = "insert into phone_no values (?, ?, ?)";
+            
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            PreparedStatement pstmt_2 = conn.prepareStatement(query_2);
+            PreparedStatement pstmt_3 = conn.prepareStatement(query_2);
+            PreparedStatement pstmt_4 = conn.prepareStatement(query_3);
+            
+            if(textSSN.getText().trim().isEmpty() || textName.getText().trim().isEmpty() || textAddress1.getText().trim().isEmpty() || textAddress2.getText().trim().isEmpty() || textPhoneNo1.getText().trim().isEmpty())
+            {
+                JOptionPane.showMessageDialog(null, "Empty fields are not accepted.");
+                return;
+            }
+            String ssn = textSSN.getText();
+            Statement stmt_1 = conn.createStatement();
+            ResultSet rs = stmt_1.executeQuery("SELECT Name FROM MEMBER WHERE SSN = "+ssn);
+            while(rs.next()){
+                String name = rs.getString("Name");
+                JOptionPane.showMessageDialog(null, name + " is already a member.");
+                textSSN.setText("");
+                textName.setText("");
+                textEmailID.setText("");
+                jCheckBox1.setSelected(false);
+                comboAddressType1.setSelectedIndex(0);
+                textAddress1.setText("");
+                comboAddressType2.setSelectedIndex(0);
+                textAddress2.setText("");
+                textStaffID.setText("");
+                comboPhoneNoType.setSelectedIndex(0);
+                textPhoneNo1.setText("");
+                comboPhoneNoType2.setSelectedIndex(0);
+                textPhoneNo2.setText("");
+                return;
+            }
+            pstmt.setString(1, textSSN.getText());
+            pstmt_2.setString(1, textSSN.getText());
+            pstmt_3.setString(1, textSSN.getText());
+            
+            pstmt.setString(2, textName.getText());
+            
+            pstmt.setString(3, textEmailID.getText());
+            
+            String is_Faculty;
+            if(jCheckBox1.isSelected()){
+                is_Faculty = jCheckBox1.getText();
+            }
+            else{
+                is_Faculty = "No";
+            }
+            
+            pstmt.setString(4, is_Faculty);
+            
+            String member_ssn, member_name, mem_id;
+            member_ssn = textSSN.getText();
+            member_name = textName.getText();
+            mem_id = member_name.substring(0, 2) + member_ssn;            
+            pstmt.setString(5, mem_id);
+            
+            LocalDate today = LocalDate.now();
+            int year = today.getYear();
+            int month = today.getMonthValue();
+            int day = today.getDayOfMonth();
+            String validity;
+            int validity_year = year + 4;
+            validity = Integer.toString(validity_year) + '-' + Integer.toString(month) + '-' + Integer.toString(day);
+            pstmt.setString(6, validity);
+            
+            if(textStaffID.getText().isEmpty())
+                pstmt.setNull(7, Types.INTEGER);
+            else
+                pstmt.setInt(7, Integer.parseInt(textStaffID.getText()));
+            
+            String address;
+            address = textAddress1.getText();
+            pstmt_2.setString(2, address);
+            pstmt_3.setString(2, textAddress2.getText());
+            
+            String address_type;
+            address_type = comboAddressType1.getSelectedItem().toString();
+            pstmt_2.setString(3, address_type);
+            pstmt_3.setString(3, comboAddressType2.getSelectedItem().toString());
+            
+            if(comboAddressType1.getSelectedItem().toString().equals(comboAddressType2.getSelectedItem().toString())){
+                JOptionPane.showMessageDialog(null, "Both addresses cannot be of the same type.");
+                return;
+            }
+
+            Map<String, String> phone_map = new HashMap<>();
+            phone_map.put(comboPhoneNoType.getSelectedItem().toString(), textPhoneNo1.getText());
+            phone_map.put(comboPhoneNoType2.getSelectedItem().toString(), textPhoneNo2.getText());
+            if(comboPhoneNoType.getSelectedItem().toString().equals(comboPhoneNoType2.getSelectedItem().toString())){
+                JOptionPane.showMessageDialog(null, "Both phone numbers cannot be of the same type.");
+                return;
+            }
+            if(textPhoneNo2.getText().trim().isEmpty()){
+                phone_map.put(comboPhoneNoType2.getSelectedItem().toString(), "NULL");
+            }
+            
+            pstmt.executeUpdate();          
+            pstmt_2.executeUpdate();
+            pstmt_3.executeUpdate();
+            for(Object key : phone_map.keySet()){
+                Object value = phone_map.get(key);
+                pstmt_4.setString(1, textSSN.getText());
+                pstmt_4.setString(2, value.toString());
+                pstmt_4.setString(3, key.toString());
+                pstmt_4.executeUpdate();
+            }
+            JOptionPane.showMessageDialog(null, member_name+" enrolled as a member.");
+            UniversityLibrary u_lib = new UniversityLibrary();
+            u_lib.setVisible(true);
+            dispose();
+        }catch(Exception e){
+            JOptionPane.showMessageDialog(null, e);
+        }
+    } 
+
+Transaction 4.2
+
+        try{
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/library", "root", "password");
+            
+            String query_1 = "insert into book values (?, ?, ?, ?, ?, ?)";
+            String query_2 = "insert into author values (?, ?)";
+            String query_3 = "insert into catalogue values (?, ?)";
+            String query_4 = "insert into copies values (?, ?)";
+            
+            PreparedStatement pstmt_1 = conn.prepareStatement(query_1);
+            PreparedStatement pstmt_2 = conn.prepareStatement(query_2);
+            PreparedStatement pstmt_3 = conn.prepareStatement(query_3);
+            PreparedStatement pstmt_4 = conn.prepareStatement(query_4);
+            
+            if(textISBN.getText().trim().isEmpty() || textTitle.getText().trim().isEmpty() || textIssueNo.getText().trim().isEmpty() || textSubject.getText().trim().isEmpty() || textBinding.getText().trim().isEmpty() || textType.getText().trim().isEmpty() || textCopies.getText().trim().isEmpty() || textAreaDescription.getText().trim().isEmpty() || textAuthors.getText().trim().isEmpty())
+            {
+                JOptionPane.showMessageDialog(null, "Empty fields cannot be accepted.");
+                return;
+            }
+            
+            pstmt_1.setString(1, textISBN.getText());
+            pstmt_3.setString(1, textISBN.getText());
+            pstmt_4.setString(1, textISBN.getText());
+            
+            pstmt_1.setString(2, textTitle.getText());
+            pstmt_1.setInt(3, Integer.parseInt(textIssueNo.getText()));
+            pstmt_1.setString(4, textSubject.getText());
+            pstmt_1.setString(5, textBinding.getText());
+            pstmt_1.setString(6, textType.getText());
+            
+            pstmt_3.setString(2, textAreaDescription.getText());
+            pstmt_4.setInt(2, Integer.parseInt(textCopies.getText()));
+            
+            pstmt_1.executeUpdate();
+            String authors = textAuthors.getText();
+            String[] arr_of_authors = authors.split(",");
+            for(int author=0; author < arr_of_authors.length; author++)
+            {
+                pstmt_2.setString(1, textISBN.getText());
+                pstmt_2.setString(2, arr_of_authors[author].trim());
+                pstmt_2.executeUpdate();
+            }
+            pstmt_3.executeUpdate();
+            pstmt_4.executeUpdate();
+            
+            JOptionPane.showMessageDialog(null, "Book with ISBN : " + textISBN.getText() + " added into the database.");
+            UniversityLibrary u_lib = new UniversityLibrary();
+            u_lib.setVisible(true);
+            dispose();
+            
+        }catch(Exception e){
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }
+
+Transaction 4.3
+
+        try{
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/library", "root", "password");
+            
+            Statement stmt = conn.createStatement();
+            String isbn = textISBN.getText();
+            ResultSet rs = stmt.executeQuery("SELECT Num_Of_Copies FROM COPIES WHERE ISBN = "+isbn);
+            Statement stmt_1 = conn.createStatement();
+            ResultSet rs_1 = stmt_1.executeQuery("SELECT TYPE FROM BOOK WHERE ISBN = "+isbn);
+            
+            String copies = "0", book_type = "Subject";
+            if(!rs_1.isBeforeFirst() && !rs.isBeforeFirst()){
+                JOptionPane.showMessageDialog(null, "Book with ISBN : " + isbn + " not available.");
+                textSSN.setEnabled(false);
+                btnBorrowBook.setEnabled(false);
+            }
+            else {
+                while ( rs_1.next() ) {
+                book_type = rs_1.getString("TYPE");
+                //System.out.println(book_type);
+                }
+                while ( rs.next() ) {
+                copies = rs.getString("Num_Of_Copies");
+                //System.out.println(copies);
+                }
+                if(copies.equals("0")){
+                    JOptionPane.showMessageDialog(null, "No copies available.");
+                }
+                else if(book_type.equals("Subject")){
+                    textSSN.setEnabled(true);
+                    btnBorrowBook.setEnabled(true);
+                    JOptionPane.showMessageDialog(null, copies + " copies available. Enter member's SSN to borrow a copy.");
+                }
+                else{
+                    JOptionPane.showMessageDialog(null, copies + " copies available. " + book_type + " book cannot be borrowed.");
+                }
+            }
+        }catch(Exception e){
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }
+
+Transaction 4.4
+
+        try{
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/library", "root", "password");
+            
+            String isbn = textISBN.getText();
+            String member_ssn = textSSN.getText();
+            Statement stmt_1 = conn.createStatement();
+            ResultSet rs_1 = stmt_1.executeQuery("SELECT LOAN_NO, SSN, ISBN, ISSUE_DATE, DUE_DATE FROM ISSUE_BOOK WHERE SSN = " + member_ssn + " and ISBN = " + isbn + " and RETURN_DATE is NULL");       
+            if(!rs_1.isBeforeFirst()){
+                JOptionPane.showMessageDialog(null, "Incorrect Member SSN or ISBN.");
+                textISBN.setText("");
+                textSSN.setText("");
+            }
+            else {
+                int loan_no = 0;
+                String i_date = "", d_date = "";
+                while( rs_1.next() ){
+                loan_no = rs_1.getInt("LOAN_NO");
+                //System.out.println(loan_no);
+                Date issue_Date = rs_1.getDate("ISSUE_DATE");
+                i_date = issue_Date.toString();
+                Date due_Date = rs_1.getDate("DUE_DATE");
+                d_date = due_Date.toString();
+                }
+                String query_1 = "update issue_book set Return_date = ? where ssn = " + member_ssn + " and isbn = " + isbn + " and loan_no = " + loan_no;
+                PreparedStatement pstmt_1 = conn.prepareStatement(query_1);
+                LocalDate today = LocalDate.now();
+                int year = today.getYear();
+                int month = today.getMonthValue();
+                int day = today.getDayOfMonth();
+                String return_Date = Integer.toString(year) + '-' + Integer.toString(month) + '-' + Integer.toString(day);
+                pstmt_1.setString(1, return_Date);
+                pstmt_1.executeUpdate();
+                
+                String copies = "0";
+                Statement stmt_2 = conn.createStatement();
+                ResultSet rs_2 = stmt_2.executeQuery("SELECT Num_Of_Copies FROM COPIES WHERE ISBN = "+isbn);
+                String query_2 = "update copies set Num_Of_Copies=? where isbn=" + isbn;
+                PreparedStatement pstmt_2 = conn.prepareStatement(query_2);
+                while ( rs_2.next() ) {
+                copies = rs_2.getString("Num_Of_Copies");
+                //System.out.println(copies);
+                }
+                int num_copies = Integer.parseInt(copies) + 1;
+                pstmt_2.setInt(1, num_copies);
+                pstmt_2.executeUpdate();
+                
+                Statement stmt_3 = conn.createStatement();
+                ResultSet rs_3 = stmt_3.executeQuery("SELECT Name FROM MEMBER WHERE SSN = "+member_ssn);
+                String member_name = "";
+                while ( rs_3.next() ) {
+                member_name = rs_3.getString("Name");
+                //System.out.println(member_name);
+                }
+                JOptionPane.showMessageDialog(null, "\n***Reciept***\n\nBook returned by " + member_name + ".\nIssue date: " + i_date+ ".\nDue date: " + d_date+ ".\nReturn date: " + return_Date + ".");
+                UniversityLibrary u_lib = new UniversityLibrary();
+                u_lib.setVisible(true);
+                dispose();
+            }
+            
+        }catch(Exception e){
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }                                         
+
+Transaction 4.5
+
+        try{
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/library", "root", "password");
+            
+            String member_ssn = textSSN.getText();
+            Statement stmt_1 = conn.createStatement();
+            ResultSet rs_1 = stmt_1.executeQuery("SELECT NAME FROM MEMBER WHERE SSN = "+member_ssn);
+            if(!rs_1.isBeforeFirst()){
+                JOptionPane.showMessageDialog(null, "Not a registered member.");
+                textSSN.setText("");
+            }
+            else{
+                    Statement stmt_2 = conn.createStatement();
+                    ResultSet rs_2 = stmt_2.executeQuery("SELECT VALIDITY FROM MEMBER WHERE SSN = "+member_ssn);
+                    String member_name = "";
+                    String  validity_date="";
+                    while(rs_1.next()){
+                        member_name = rs_1.getString("NAME");
+                    }
+                    while(rs_2.next()){
+                        validity_date = rs_2.getDate("VALIDITY").toString();
+                    }
+                    LocalDate v_date = LocalDate.parse(validity_date);
+                    LocalDate today = LocalDate.now();
+                    long diff_days = ChronoUnit.DAYS.between(today, v_date);
+                    int num_of_days = (int)diff_days;
+                    System.out.println(num_of_days);
+                    if(num_of_days > 30){
+                        JOptionPane.showMessageDialog(null, "\n *** Validity date should be within a month to renew membership. ***\n\n\n    " + member_name + "'s membership validity already until : " + validity_date);
+                    }
+                    else{
+                        LocalDate today_date = LocalDate.now();
+                        int year = today_date.getYear();
+                        int month = today_date.getMonthValue();
+                        int day = today_date.getDayOfMonth();
+                        String validity;
+                        int validity_year = year + 4;
+                        validity = Integer.toString(validity_year) + '-' + Integer.toString(month) + '-' + Integer.toString(day);
+                        String query_1 = "UPDATE MEMBER SET VALIDITY = ? WHERE SSN = " + member_ssn;
+                        PreparedStatement pstmt_1 = conn.prepareStatement(query_1);
+                        pstmt_1.setString(1, validity);
+                        pstmt_1.executeUpdate();
+                        JOptionPane.showMessageDialog(null, member_name + "'s validity extended upto : " + validity);
+                    }
+            }
+            
+        }catch(Exception e){
+            JOptionPane.showMessageDialog(null, e);
+        }
+    }
